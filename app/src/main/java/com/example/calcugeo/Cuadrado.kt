@@ -4,13 +4,17 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
-import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlin.math.sqrt
 
 class Cuadrado : AppCompatActivity() {
+
+    // Bandera para evitar actualizaciones recíprocas
+    private var updating: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -24,46 +28,138 @@ class Cuadrado : AppCompatActivity() {
         }
 
         // Referencias a los EditText
-        val editTextLado1 = findViewById<EditText>(R.id.editTextLado1)
-        val editTextLado2 = findViewById<EditText>(R.id.editTextLado2)
-        val editTextLado3 = findViewById<EditText>(R.id.editTextLado3)
-        val editTextLado4 = findViewById<EditText>(R.id.editTextLado4)
+        val editTextLado = findViewById<EditText>(R.id.editTextLado)
+        val editTextArea = findViewById<EditText>(R.id.textView2)
+        val editTextPerimetro = findViewById<EditText>(R.id.textView3)
+        val editTextDiagonal = findViewById<EditText>(R.id.editTextNumberDecimal)
 
-        // Referencias a los TextView para Área y Perímetro
-        val textViewArea = findViewById<TextView>(R.id.textView2)
-        val textViewPerimetro = findViewById<TextView>(R.id.textView3)
+        // Función auxiliar para actualizar los valores a partir del lado
+        fun actualizarDesdeLado(lado: Double) {
+            val area = lado * lado
+            val perimetro = 4 * lado
+            val diagonal = lado * sqrt(2.0)
+            updating = true
+            editTextArea.setText(area.toString())
+            editTextPerimetro.setText(perimetro.toString())
+            editTextDiagonal.setText(diagonal.toString())
+            updating = false
+        }
 
-        // Creamos un TextWatcher común que se activa al cambiar el contenido de cualquier EditText
-        val textWatcher = object : TextWatcher {
+        // TextWatcher para el EditText del Lado
+        editTextLado.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Usamos el valor del EditText que disparó el evento
-                val sideStr = s.toString()
-                updateCalculation(sideStr, textViewArea, textViewPerimetro)
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) {
+                if (updating) return
+                val str = s.toString()
+                if (str.isEmpty()) {
+                    updating = true
+                    editTextArea.setText("")
+                    editTextPerimetro.setText("")
+                    editTextDiagonal.setText("")
+                    updating = false
+                    return
+                }
+                try {
+                    val lado = str.toDouble()
+                    actualizarDesdeLado(lado)
+                } catch (e: NumberFormatException) {
+                    // En caso de error de conversión, se puede notificar o ignorar.
+                }
             }
+        })
 
-            override fun afterTextChanged(s: Editable?) { }
-        }
+        // TextWatcher para el EditText del Área
+        editTextArea.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) {
+                if (updating) return
+                val str = s.toString()
+                if (str.isEmpty()) {
+                    updating = true
+                    editTextLado.setText("")
+                    editTextPerimetro.setText("")
+                    editTextDiagonal.setText("")
+                    updating = false
+                    return
+                }
+                try {
+                    val area = str.toDouble()
+                    val lado = sqrt(area)
+                    updating = true
+                    editTextLado.setText(lado.toString())
+                    val perimetro = 4 * lado
+                    val diagonal = lado * sqrt(2.0)
+                    editTextPerimetro.setText(perimetro.toString())
+                    editTextDiagonal.setText(diagonal.toString())
+                    updating = false
+                } catch (e: NumberFormatException) {
+                    // Manejar error
+                }
+            }
+        })
 
-        // Agregamos el mismo TextWatcher a los cuatro EditText
-        editTextLado1.addTextChangedListener(textWatcher)
-        editTextLado2.addTextChangedListener(textWatcher)
-        editTextLado3.addTextChangedListener(textWatcher)
-        editTextLado4.addTextChangedListener(textWatcher)
-    }
+        // TextWatcher para el EditText del Perímetro
+        editTextPerimetro.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) {
+                if (updating) return
+                val str = s.toString()
+                if (str.isEmpty()) {
+                    updating = true
+                    editTextLado.setText("")
+                    editTextArea.setText("")
+                    editTextDiagonal.setText("")
+                    updating = false
+                    return
+                }
+                try {
+                    val perimetro = str.toDouble()
+                    val lado = perimetro / 4.0
+                    updating = true
+                    editTextLado.setText(lado.toString())
+                    val area = lado * lado
+                    val diagonal = lado * sqrt(2.0)
+                    editTextArea.setText(area.toString())
+                    editTextDiagonal.setText(diagonal.toString())
+                    updating = false
+                } catch (e: NumberFormatException) {
+                    // Manejar error
+                }
+            }
+        })
 
-    // Función que calcula y actualiza el área y perímetro
-    private fun updateCalculation(sideStr: String, textViewArea: TextView, textViewPerimetro: TextView) {
-        val side = sideStr.toDoubleOrNull()
-        if (side != null && side > 0) {
-            val area = side * side
-            val perimetro = 4 * side
-            textViewArea.text = "Area: $area"
-            textViewPerimetro.text = "Perimetro: $perimetro"
-        } else {
-            textViewArea.text = "Area: -"
-            textViewPerimetro.text = "Perimetro: -"
-        }
+        // TextWatcher para el EditText de la Diagonal
+        editTextDiagonal.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) {
+                if (updating) return
+                val str = s.toString()
+                if (str.isEmpty()) {
+                    updating = true
+                    editTextLado.setText("")
+                    editTextArea.setText("")
+                    editTextPerimetro.setText("")
+                    updating = false
+                    return
+                }
+                try {
+                    val diagonal = str.toDouble()
+                    val lado = diagonal / sqrt(2.0)
+                    updating = true
+                    editTextLado.setText(lado.toString())
+                    val area = lado * lado
+                    val perimetro = 4 * lado
+                    editTextArea.setText(area.toString())
+                    editTextPerimetro.setText(perimetro.toString())
+                    updating = false
+                } catch (e: NumberFormatException) {
+                    // Manejar error
+                }
+            }
+        })
     }
 }

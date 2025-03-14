@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity() {
         // Obtener referencia al botón cuadrado
         val btnCuadrado = findViewById<ImageButton>(R.id.btnCuadrado)
         val btnRombo = findViewById<ImageButton>(R.id.btnRombo)
+        val btnCirculo = findViewById<ImageButton>(R.id.btnCirculo)
+        val btnRectangulo = findViewById<ImageButton>(R.id.btnRectangulo)
+
 
         // Configurar clic para abrir la actividad Cuadrado
         btnCuadrado.setOnClickListener {
@@ -31,6 +34,14 @@ class MainActivity : AppCompatActivity() {
         }
         btnRombo.setOnClickListener {
             val intent = Intent(this, Rombo::class.java)
+            startActivity(intent)
+        }
+        btnCirculo.setOnClickListener {
+            val intent = Intent(this, Circulo::class.java)
+            startActivity(intent)
+        }
+        btnRectangulo.setOnClickListener {
+            val intent = Intent(this, Rectangulo::class.java)
             startActivity(intent)
         }
     }

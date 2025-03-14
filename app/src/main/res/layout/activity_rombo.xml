@@ -70,27 +70,42 @@
             android:layout_marginEnd="180dp"/>
 
     <!-- TextView para mostrar el área -->
-    <TextView
+    <EditText
             android:id="@+id/textView4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Area: -"
             android:textSize="18sp"
+            android:textColor="@color/white"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="40dp"/>
 
     <!-- TextView para mostrar el perímetro -->
-    <TextView
+    <EditText
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Perimetro: -"
             android:textSize="18sp"
+            android:textColor="@color/white"
             app:layout_constraintTop_toBottomOf="@id/textView4"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="20dp"/>
+    <TextView
+            android:text="TextView"
+            android:layout_width="wrap_content"
+            android:textColor="@color/white"
+            android:layout_height="wrap_content" android:id="@+id/textView6"
+            app:layout_constraintTop_toBottomOf="@+id/imageView2" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="50dp"/>
+    <Button
+            android:text="Reiniciar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/button2"
+            app:layout_constraintTop_toBottomOf="@+id/textView5" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

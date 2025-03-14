@@ -3,83 +3,127 @@ package com.example.calcugeo
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import kotlin.math.sqrt
 
 class Rombo : AppCompatActivity() {
+
+    private var updating = false // Bandera para evitar actualizaciones recíprocas
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_rombo)
 
-        // Ajuste para edge-to-edge
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
-        // Referencias a los EditText
+        // Referencias a los elementos de la interfaz
         val editTextDiagonalMayor = findViewById<EditText>(R.id.editTextDiagonalMayor)
         val editTextDiagonalMenor = findViewById<EditText>(R.id.editTextDiagonalMenor)
-        val editTextLado = findViewById<EditText>(R.id.editTextLado1)
-
-        // Referencias a los TextView para Área y Perímetro
+        val editTextLado1 = findViewById<EditText>(R.id.editTextLado1)
         val textViewArea = findViewById<TextView>(R.id.textView4)
         val textViewPerimetro = findViewById<TextView>(R.id.textView5)
+        val textViewMensaje = findViewById<TextView>(R.id.textView6)
+        val buttonReiniciar = findViewById<Button>(R.id.button2)
 
-        // Creamos un TextWatcher que se activará en cualquiera de los EditText
-        val textWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+        // Inicializar mensaje
+        textViewMensaje.text = "Ingrese dos datos para empezar"
+        buttonReiniciar.isEnabled = false // El botón reiniciar inicia deshabilitado
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                updateCalculations(
-                    editTextDiagonalMayor.text.toString(),
-                    editTextDiagonalMenor.text.toString(),
-                    editTextLado.text.toString(),
-                    textViewArea,
-                    textViewPerimetro
-                )
+        fun updateRombo() {
+            if (updating) return
+            updating = true
+
+            val dMStr = editTextDiagonalMayor.text.toString().trim()
+            val dmStr = editTextDiagonalMenor.text.toString().trim()
+            val ladoStr = editTextLado1.text.toString().trim()
+
+            val dM = dMStr.toDoubleOrNull()
+            val dm = dmStr.toDoubleOrNull()
+            val L = ladoStr.toDoubleOrNull()
+
+            var computedA: Double? = null
+            var computedP: Double? = null
+            var computedL: Double? = null
+            var computedDM: Double? = null
+            var computedDMenor: Double? = null
+
+            textViewMensaje.text = ""
+
+            when {
+                dM != null && dm != null -> {
+                    computedL = sqrt((dM / 2) * (dM / 2) + (dm / 2) * (dm / 2))
+                    computedA = (dM * dm) / 2
+                    computedP = 4 * computedL
+                }
+                dM != null && L != null -> {
+                    if (L < dM / 2) {
+                        textViewMensaje.text = "Error: Lado menor que la mitad de la diagonal mayor."
+                        updating = false
+                        return
+                    }
+                    computedDMenor = 2 * sqrt(L * L - (dM / 2) * (dM / 2))
+                    computedA = (dM * computedDMenor) / 2
+                    computedP = 4 * L
+                }
+                dm != null && L != null -> {
+                    if (L < dm / 2) {
+                        textViewMensaje.text = "Error: Lado menor que la mitad de la diagonal menor."
+                        updating = false
+                        return
+                    }
+                    computedDM = 2 * sqrt(L * L - (dm / 2) * (dm / 2))
+                    computedA = (computedDM * dm) / 2
+                    computedP = 4 * L
+                }
+                else -> {
+                    textViewMensaje.text = "Faltan datos para calcular."
+                    updating = false
+                    return
+                }
             }
 
-            override fun afterTextChanged(s: Editable?) { }
+            computedL?.let { editTextLado1.setText(it.toString()) }
+            computedDM?.let { editTextDiagonalMayor.setText(it.toString()) }
+            computedDMenor?.let { editTextDiagonalMenor.setText(it.toString()) }
+            computedA?.let { textViewArea.text = "Área: $it" }
+            computedP?.let { textViewPerimetro.text = "Perímetro: $it" }
+
+            // Bloquear campos después del cálculo
+            editTextDiagonalMayor.isEnabled = false
+            editTextDiagonalMenor.isEnabled = false
+            editTextLado1.isEnabled = false
+
+            buttonReiniciar.isEnabled = true // Habilitar botón reiniciar
+            updating = false
         }
 
-        // Agregar el TextWatcher a cada EditText
-        editTextDiagonalMayor.addTextChangedListener(textWatcher)
-        editTextDiagonalMenor.addTextChangedListener(textWatcher)
-        editTextLado.addTextChangedListener(textWatcher)
-    }
-
-    // Función para actualizar los cálculos de área y perímetro
-    private fun updateCalculations(
-        diagMayorStr: String,
-        diagMenorStr: String,
-        ladoStr: String,
-        textViewArea: TextView,
-        textViewPerimetro: TextView
-    ) {
-        // Cálculo del área usando las diagonales
-        val diagMayor = diagMayorStr.toDoubleOrNull()
-        val diagMenor = diagMenorStr.toDoubleOrNull()
-        if (diagMayor != null && diagMayor > 0 && diagMenor != null && diagMenor > 0) {
-            val area = (diagMayor * diagMenor) / 2
-            textViewArea.text = "Area: $area"
-        } else {
-            textViewArea.text = "Area: -"
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                updateRombo()
+            }
         }
 
-        // Cálculo del perímetro usando el lado
-        val lado = ladoStr.toDoubleOrNull()
-        if (lado != null && lado > 0) {
-            val perimetro = 4 * lado
-            textViewPerimetro.text = "Perimetro: $perimetro"
-        } else {
-            textViewPerimetro.text = "Perimetro: -"
+        editTextDiagonalMayor.addTextChangedListener(watcher)
+        editTextDiagonalMenor.addTextChangedListener(watcher)
+        editTextLado1.addTextChangedListener(watcher)
+
+        buttonReiniciar.setOnClickListener {
+            editTextDiagonalMayor.text.clear()
+            editTextDiagonalMenor.text.clear()
+            editTextLado1.text.clear()
+            textViewArea.text = "Área: -"
+            textViewPerimetro.text = "Perímetro: -"
+            textViewMensaje.text = "Ingrese dos datos para empezar"
+
+            editTextDiagonalMayor.isEnabled = true
+            editTextDiagonalMenor.isEnabled = true
+            editTextLado1.isEnabled = true
+
+            buttonReiniciar.isEnabled = false // Deshabilitar el botón de reinicio hasta un nuevo cálculo
         }
     }
 }

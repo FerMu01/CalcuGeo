@@ -11,6 +11,12 @@
             android:theme="@style/Theme.CalcuGeo"
             tools:targetApi="31">
         <activity
+                android:name=".Rectangulo"
+                android:exported="false"/>
+        <activity
+                android:name=".Circulo"
+                android:exported="false"/>
+        <activity
                 android:name=".Rombo"
                 android:exported="false"/>
         <activity
